@@ -14,6 +14,13 @@ import {
   Clock,
   FileText,
   ChevronRight,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Building2,
+  Phone,
+  Globe,
+  FileSpreadsheet,
 } from "lucide-react";
 
 interface GuideStep {
@@ -30,10 +37,20 @@ interface Regulation {
   content: string;
 }
 
+interface HandlingRequirement {
+  title: string;
+  items: string[];
+}
+
 interface GuideData {
   id: string;
   steps: GuideStep[];
   regulations: Regulation[];
+  handling_requirements?: HandlingRequirement[];
+  deadline_info?: {
+    main_deadline: string;
+    return_deadline?: string;
+  };
 }
 
 interface CaseData {
@@ -49,6 +66,34 @@ interface AnalysisData {
   appeals: Array<{ id: string; content: string; type: string; confirmed: boolean }>;
   key_info: Record<string, string | string[] | undefined>;
 }
+
+// 信访来源配置
+const SOURCE_CONFIG: Record<string, {
+  icon: React.ReactNode;
+  color: string;
+  bgColor: string;
+}> = {
+  "首问负责制": {
+    icon: <Building2 className="h-5 w-5" />,
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+  },
+  "12345热线": {
+    icon: <Phone className="h-5 w-5" />,
+    color: "text-orange-600",
+    bgColor: "bg-orange-50",
+  },
+  "全国生态环境信访投诉举报管理平台": {
+    icon: <Globe className="h-5 w-5" />,
+    color: "text-green-600",
+    bgColor: "bg-green-50",
+  },
+  "信访信息系统": {
+    icon: <FileSpreadsheet className="h-5 w-5" />,
+    color: "text-purple-600",
+    bgColor: "bg-purple-50",
+  },
+};
 
 export default function GuidePage({
   params,
@@ -146,6 +191,8 @@ export default function GuidePage({
   const hasWrittenResponse =
     caseData.requires_written_response || caseData.source === "信访信息系统";
 
+  const sourceConfig = SOURCE_CONFIG[caseData.source] || SOURCE_CONFIG["首问负责制"];
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
@@ -194,15 +241,23 @@ export default function GuidePage({
       {/* 流程模式说明 */}
       <Card className="mb-6">
         <CardContent className="py-4">
-          <div className="flex items-center gap-2">
-            <Badge variant={hasWrittenResponse ? "default" : "secondary"}>
-              {hasWrittenResponse ? "标准流程" : "简化流程"}
-            </Badge>
-            <span className="text-sm text-muted-foreground">
-              {hasWrittenResponse
-                ? "此信访件需要完整文书流程，系统将引导您完成所有步骤"
-                : "此信访件仅需平台规范答复，完成流程指引即可"}
-            </span>
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${sourceConfig.bgColor}`}>
+              <div className={sourceConfig.color}>{sourceConfig.icon}</div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{caseData.source}</span>
+                <Badge variant={hasWrittenResponse ? "default" : "secondary"}>
+                  {hasWrittenResponse ? "标准流程" : "简化流程"}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {hasWrittenResponse
+                  ? "此信访件需要完整文书流程，系统将引导您完成所有步骤"
+                  : "此信访件仅需平台规范答复，完成流程指引即可"}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -212,6 +267,169 @@ export default function GuidePage({
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      )}
+
+      {/* 办理要求提示（简化流程时显示） */}
+      {!hasWrittenResponse && (
+        <Card className="mb-6 border-l-4 border-l-blue-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-blue-500" />
+              办理要求
+            </CardTitle>
+            <CardDescription>请按以下要求规范答复</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-medium mb-2">基本要求</h4>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>针对反映问题，逐条进行明确答复</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>措辞得当并通俗易懂，不可敷衍了事</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>如不属于职责范围，应明确告知不予受理及依据</span>
+                  </li>
+                </ul>
+              </div>
+
+              {caseData.source === "首问负责制" && (
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <h4 className="font-medium mb-2">首问负责制专项要求</h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-500">•</span>
+                      <span>办理时限：<strong className="text-foreground">20个工作日</strong></span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-500">•</span>
+                      <span>办理情况要体现举报人所反映单位的规范全称、反映问题是否属实、现场查处情况及采取的措施、是否整改完成等要素</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-500">•</span>
+                      <span>确保在市局网站公示时不出任何问题</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {caseData.source === "12345热线" && (
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <h4 className="font-medium mb-2">12345热线专项要求</h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-500">•</span>
+                      <span>办理时限：<strong className="text-foreground">7个自然日</strong></span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-500">•</span>
+                      <span>合理诉求应尽量解决</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-500">•</span>
+                      <span>不合理诉求应向来电人解释清楚缘由并提交不合理诉求申请</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-500">•</span>
+                      <span>将办理情况、答复来电人情况及时报送至市局"环境信访"内网账号</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {caseData.source === "全国生态环境信访投诉举报管理平台" && (
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <h4 className="font-medium mb-2">生态环境平台专项要求</h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500">•</span>
+                      <span>办理时限：<strong className="text-foreground">原则上30个自然日内回复</strong></span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500">•</span>
+                      <span>办理情况要体现举报人所反映单位规范全称、反映问题是否属实、现场查处情况及采取的措施</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500">•</span>
+                      <span>如需整改，跟踪督导并及时上传整改前后对比照片</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500">•</span>
+                      <span>如不在职责范围，明确描述核查情况及不属于职责范围的条文依据</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500">•</span>
+                      <span>确保各级抽查一次性通过</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {/* 不予受理提示 */}
+              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <XCircle className="h-4 w-4 text-amber-600" />
+                  不予受理情形
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  如不属于本单位职责范围，应明确告知不予受理，并说明法律依据或条文依据，指引信访人向有权处理的部门反映。
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 标准流程时的办理要求 */}
+      {hasWrittenResponse && caseData.source === "信访信息系统" && (
+        <Card className="mb-6 border-l-4 border-l-purple-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-purple-500" />
+              办理要求
+            </CardTitle>
+            <CardDescription>信访信息系统需要完整文书流程</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-purple-50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">受理时限</div>
+                  <div className="font-bold text-lg">15日内</div>
+                  <div className="text-xs text-muted-foreground">出具受理告知书</div>
+                </div>
+                <div className="p-4 bg-purple-50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">办理时限</div>
+                  <div className="font-bold text-lg">2个月内</div>
+                  <div className="text-xs text-muted-foreground">出具答复意见书</div>
+                </div>
+              </div>
+              <div className="p-4 bg-slate-50 rounded-lg">
+                <h4 className="font-medium mb-2">答复要求</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>针对反映问题，逐条进行明确答复</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>办理情况要体现单位的规范全称、问题是否属实、查处情况及措施、是否整改完成</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                    <span>要体现救济途径，且救济途径需正确</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* 生成按钮 */}
