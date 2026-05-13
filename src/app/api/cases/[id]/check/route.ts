@@ -201,7 +201,7 @@ ${contentToCheck || "（已上传文件，请告知用户复制文件内容进�
         check_result: checkResult,
         issues: checkResult.issues || [],
         suggestions: checkResult.suggestions || [],
-        created_by: user.id,
+        passed: checkResult.passed || false,
       })
       .select()
       .single();
