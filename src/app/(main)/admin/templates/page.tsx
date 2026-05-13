@@ -56,7 +56,7 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState<TemplateData[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -76,7 +76,7 @@ export default function TemplatesPage() {
       const params = new URLSearchParams({
         page: page.toString(),
         pageSize: "10",
-        category,
+        category: category === "all" ? "" : category,
       });
       const response = await fetch(`/api/admin/templates?${params}`);
       const data = await response.json();
@@ -247,7 +247,7 @@ export default function TemplatesPage() {
                 <SelectValue placeholder="全部分类" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部分类</SelectItem>
+                <SelectItem value="all">全部分类</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat.value} value={cat.value}>
                     {cat.label}
