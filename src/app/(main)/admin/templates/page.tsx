@@ -42,8 +42,8 @@ interface TemplateData {
 }
 
 const categories = [
-  { value: "书面答复", label: "书面答复" },
   { value: "信访信息系统", label: "信访信息系统" },
+  { value: "书面答复", label: "书面答复" },
 ];
 
 export default function TemplatesPage() {
