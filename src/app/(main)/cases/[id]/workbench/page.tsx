@@ -47,6 +47,7 @@ interface AnalysisData {
   appeals: Appeal[];
   key_info: KeyInfo;
   user_confirmed: boolean;
+  request_type?: string; // 投诉/举报
 }
 
 interface CaseData {
@@ -374,9 +375,21 @@ export default function WorkbenchPage({
                     <CheckCircle2 className="h-5 w-5" />
                     <span className="font-medium">AI 已分析完成</span>
                   </div>
-                  <p className="text-sm text-green-600">
-                    共提取 {appeals.length} 个诉求要点，请逐条确认
-                  </p>
+                  <div className="text-sm text-green-600 space-y-1">
+                    <p>共提取 {appeals.length} 个诉求要点，请逐条确认</p>
+                    {analysis?.request_type && (
+                      <p className="flex items-center gap-2">
+                        <span className="font-medium">诉求类型：</span>
+                        <span className={`px-2 py-0.5 rounded ${
+                          analysis.request_type === "举报" 
+                            ? "bg-orange-100 text-orange-700" 
+                            : "bg-blue-100 text-blue-700"
+                        }`}>
+                          {analysis.request_type}
+                        </span>
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* 诉求列表 */}
@@ -681,16 +694,20 @@ export default function WorkbenchPage({
                         生成延期办理告知书
                       </Button>
                       <Button
-                        onClick={() => handleGenerateDocument("投诉（举报）处理情况告知书")}
+                        onClick={() => handleGenerateDocument(
+                          analysis?.request_type === "举报" 
+                            ? "举报处理情况告知书" 
+                            : "投诉处理情况告知书"
+                        )}
                         disabled={generating !== null}
                         variant="outline"
                       >
-                        {generating === "投诉（举报）处理情况告知书" ? (
+                        {generating === "投诉处理情况告知书" || generating === "举报处理情况告知书" ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         ) : (
                           <FileText className="h-4 w-4 mr-2" />
                         )}
-                        生成处理情况告知书
+                        生成{analysis?.request_type === "举报" ? "举报" : "投诉"}处理情况告知书
                       </Button>
                     </>
                   )}

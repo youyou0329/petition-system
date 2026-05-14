@@ -113,7 +113,10 @@ export async function POST(
   }
 
   try {
-    const documentType = document_type || "投诉（举报）处理情况告知书";
+    // 根据诉求类型确定默认文书名称
+    const requestType = analysisData.request_type || "投诉";
+    const defaultDocumentType = `${requestType}处理情况告知书`;
+    const documentType = document_type || defaultDocumentType;
 
     // 先从数据库获取模板
     const { data: templateData } = await client

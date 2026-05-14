@@ -48,9 +48,16 @@ export async function POST(
 
 请仔细阅读信访件内容，完成以下分析任务：
 
-1. **诉求提取**：识别信访人的所有诉求，每个诉求应该是独立、具体的
-2. **诉求分类**：判断每个诉求的类型（咨询类、投诉类、建议类、求助类、其他）
-3. **关键信息提取**：提取信访件中的关键信息，包括时间、地点、涉及部门、事件经过等
+1. **诉求类型识别**：判断本次信访是"投诉"还是"举报"
+   - 投诉：信访人反映自身权益受到侵害，要求维护自身合法权益（如噪音扰民、污染影响生活等）
+   - 举报：信访人举报他人或企业的违法违规行为，与自身无直接利害关系（如举报企业偷排、举报违规项目等）
+   - 如果难以区分，默认为"投诉"
+
+2. **诉求提取**：识别信访人的所有诉求，每个诉求应该是独立、具体的
+
+3. **诉求分类**：判断每个诉求的类型（咨询类、投诉类、建议类、求助类、其他）
+
+4. **关键信息提取**：提取信访件中的关键信息，包括时间、地点、涉及部门、事件经过等
 
 输出要求：
 - 客观准确，不要遗漏任何诉求
@@ -59,6 +66,7 @@ export async function POST(
 
 请以 JSON 格式输出，格式如下：
 {
+  "request_type": "投诉或举报",
   "appeals": [
     {
       "id": "appeal_1",
@@ -131,6 +139,9 @@ ${caseData.raw_content}
       user_modified: false,
     }));
 
+    // 获取诉求类型（投诉/举报）
+    const requestType = analysisResult.request_type || "投诉";
+
     // 保存分析结果
     const { data: savedResult, error: saveError } = await client
       .from("analysis_results")
@@ -141,6 +152,7 @@ ${caseData.raw_content}
           key_info: analysisResult.key_info || {},
           ai_raw_response: response.content,
           user_confirmed: false,
+          request_type: requestType,
         },
         { onConflict: "case_id" }
       )
