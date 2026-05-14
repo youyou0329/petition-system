@@ -201,7 +201,7 @@ export default function NewCasePage() {
                   <div className="space-y-2">
                     <Label htmlFor="written-yes" className="flex items-center gap-2">
                       <RadioGroupItem value="yes" id="written-yes" />
-                      是，需要出具投诉/举报事项答复函
+                      是，需要出具投诉（举报）处理情况告知书
                     </Label>
                     <Label htmlFor="written-no" className="flex items-center gap-2">
                       <RadioGroupItem value="no" id="written-no" />

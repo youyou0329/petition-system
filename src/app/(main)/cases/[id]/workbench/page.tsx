@@ -644,16 +644,16 @@ export default function WorkbenchPage({
                     </>
                   ) : (
                     <Button
-                      onClick={() => handleGenerateDocument("投诉举报事项答复函")}
+                      onClick={() => handleGenerateDocument("投诉（举报）处理情况告知书")}
                       disabled={generating !== null}
                       variant="outline"
                     >
-                      {generating === "投诉举报事项答复函" ? (
+                      {generating === "投诉（举报）处理情况告知书" ? (
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
                         <FileText className="h-4 w-4 mr-2" />
                       )}
-                      生成答复函
+                      生成告知书
                     </Button>
                   )}
                 </div>

@@ -187,7 +187,7 @@ ${knowledgeContext ? `参考指引：\n${knowledgeContext}` : ""}
           steps: [
             { step: 1, title: "受理登记", description: "收到信访件后进行登记", deadline: "1个工作日", completed: false },
             { step: 2, title: "调查核实", description: "对信访事项进行调查核实", deadline: "根据实际情况", completed: false },
-            { step: 3, title: "制作答复函", description: "按照模板制作投诉/举报事项答复函", deadline: "", completed: false },
+            { step: 3, title: "制作答复函", description: "按照模板制作投诉（举报）处理情况告知书", deadline: "", completed: false },
             { step: 4, title: "送达答复", description: "将答复函送达信访人", deadline: "60日内", completed: false },
           ],
           regulations: [

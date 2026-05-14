@@ -195,7 +195,7 @@ export default function EditCasePage({
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="yes" id="yes" />
                     <Label htmlFor="yes" className="font-normal">
-                      是，需要出具投诉/举报事项答复函
+                      是，需要出具投诉（举报）处理情况告知书
                     </Label>
                   </div>
                 </RadioGroup>

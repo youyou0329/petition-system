@@ -40,7 +40,7 @@ interface CaseData {
 }
 
 const documentTypes = [
-  { value: "投诉/举报事项答复函", label: "投诉/举报事项答复函" },
+  { value: "投诉（举报）处理情况告知书", label: "投诉（举报）处理情况告知书" },
   { value: "信访事项答复意见书", label: "信访事项答复意见书" },
   { value: "受理告知书", label: "受理告知书" },
   { value: "延期办结告知书", label: "延期办结告知书" },
@@ -61,7 +61,7 @@ export default function DocumentPage({
   const [caseData, setCaseData] = useState<CaseData | null>(null);
   const [documents, setDocuments] = useState<DocumentData[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<DocumentData | null>(null);
-  const [documentType, setDocumentType] = useState("投诉/举报事项答复函");
+  const [documentType, setDocumentType] = useState("投诉（举报）处理情况告知书");
 
   useEffect(() => {
     fetchData();

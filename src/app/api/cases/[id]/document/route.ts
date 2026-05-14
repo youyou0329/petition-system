@@ -60,7 +60,7 @@ export async function POST(
     const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
     const llmClient = new LLMClient(new Config(), customHeaders);
 
-    const documentType = document_type || "投诉/举报事项答复函";
+    const documentType = document_type || "投诉（举报）处理情况告知书";
 
     const systemPrompt = `你是一位信访文书写作专家，负责根据信访信息生成规范的文书。
 
