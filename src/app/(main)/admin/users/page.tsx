@@ -21,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -30,7 +31,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Search, Users } from "lucide-react";
+import { Loader2, Plus, Search, Users, Edit, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface UserData {
   id: string;
@@ -51,6 +62,15 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // 修改角色相关
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserData | null>(null);
+  const [editRole, setEditRole] = useState("user");
+
+  // 删除相关
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<UserData | null>(null);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -126,6 +146,73 @@ export default function UsersPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // 修改用户角色
+  const handleEditRole = async () => {
+    if (!editingUser) return;
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/admin/users/${editingUser.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: editRole }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "修改失败");
+        return;
+      }
+
+      setEditDialogOpen(false);
+      setEditingUser(null);
+      fetchUsers();
+    } catch {
+      alert("修改失败");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // 删除用户
+  const handleDeleteUser = async () => {
+    if (!deletingUser) return;
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/admin/users/${deletingUser.id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "删除失败");
+        return;
+      }
+
+      setDeleteDialogOpen(false);
+      setDeletingUser(null);
+      fetchUsers();
+    } catch {
+      alert("删除失败");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openEditDialog = (user: UserData) => {
+    setEditingUser(user);
+    setEditRole(user.role);
+    setEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (user: UserData) => {
+    setDeletingUser(user);
+    setDeleteDialogOpen(true);
   };
 
   const getRoleBadge = (role: string) => {
@@ -278,6 +365,7 @@ export default function UsersPage() {
                   <TableHead>部门</TableHead>
                   <TableHead>创建时间</TableHead>
                   <TableHead>最后登录</TableHead>
+                  <TableHead className="text-center">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -294,6 +382,27 @@ export default function UsersPage() {
                       {user.last_login
                         ? new Date(user.last_login).toLocaleString()
                         : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditDialog(user)}
+                          title="修改角色"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openDeleteDialog(user)}
+                          className="text-destructive hover:text-destructive"
+                          title="删除用户"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -326,6 +435,69 @@ export default function UsersPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* 修改角色对话框 */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>修改用户角色</DialogTitle>
+            <DialogDescription>
+              修改用户 <strong>{editingUser?.real_name || editingUser?.username}</strong> 的角色
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="edit-role">选择新角色</Label>
+            <Select value={editRole} onValueChange={setEditRole}>
+              <SelectTrigger className="mt-2">
+                <SelectValue placeholder="选择角色" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">普通用户</SelectItem>
+                <SelectItem value="admin">管理员</SelectItem>
+                <SelectItem value="viewer">查看员</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={handleEditRole} disabled={submitting}>
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  修改中...
+                </>
+              ) : (
+                "确认修改"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除确认对话框 */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除用户 <strong>{deletingUser?.real_name || deletingUser?.username}</strong> 吗？
+              此操作不可恢复。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={submitting}
+            >
+              {submitting ? "删除中..." : "确认删除"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
