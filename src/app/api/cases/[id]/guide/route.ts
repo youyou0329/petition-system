@@ -168,15 +168,17 @@ ${knowledgeContext ? `参考指引：\n${knowledgeContext}` : ""}
       } else if (caseData.source === "全国生态环境信访投诉举报管理平台") {
         guideResult = {
           steps: [
-            { step: 1, title: "签收转办件", description: "在生态环境信访平台签收转办件", deadline: "1个工作日", completed: false },
-            { step: 2, title: "现场核查", description: "对举报问题进行现场核查，拍照取证", deadline: "根据实际情况", completed: false },
-            { step: 3, title: "处理整改", description: "依法处理违法行为，督促整改落实", deadline: "根据实际情况", completed: false },
-            { step: 4, title: "平台反馈", description: "在平台提交办理情况，上传整改前后对比照片", deadline: "30个自然日内", completed: false },
+            { step: 1, title: "确认职责归属", description: "确认投诉举报事项是否属于本部门职责范围", deadline: "收到转办件后15个自然日内", completed: false },
+            { step: 2, title: "平台点击受理", description: "如属于本部门职责，在平台上点击受理", deadline: "确认后15个自然日内", completed: false },
+            { step: 3, title: "现场核查", description: "对举报问题进行现场核查，拍照取证", deadline: "根据实际情况", completed: false },
+            { step: 4, title: "处理整改", description: "依法处理违法行为，督促整改落实，上传整改前后对比照片", deadline: "根据实际情况", completed: false },
+            { step: 5, title: "平台反馈", description: "在平台提交办理情况，逐条答复反映问题", deadline: "原则上60个自然日内", completed: false },
           ],
           regulations: [],
           deadline_info: {
-            main_deadline: "原则上30个自然日内回复",
-            return_deadline: "不在职责范围内的，2个工作日内回退",
+            main_deadline: "原则上60个自然日内回复",
+            accept_deadline: "15个自然日内确认是否属于本部门职责，若属于则在15个自然日内点击受理",
+            return_deadline: "不在职责范围内的，收到转办件后2个工作日内附上明确依据进行回退",
           },
         };
       } else {
