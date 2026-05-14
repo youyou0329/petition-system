@@ -618,16 +618,16 @@ export default function WorkbenchPage({
                   {isPetitionSystem ? (
                     <>
                       <Button
-                        onClick={() => handleGenerateDocument("告知书（受理告知书）")}
+                        onClick={() => handleGenerateDocument("告知书")}
                         disabled={generating !== null}
                         variant="outline"
                       >
-                        {generating === "告知书（受理告知书）" ? (
+                        {generating === "告知书" ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         ) : (
                           <FileText className="h-4 w-4 mr-2" />
                         )}
-                        生成受理告知书
+                        生成告知书
                       </Button>
                       <Button
                         onClick={() => handleGenerateDocument("依法履职答复书")}
@@ -644,18 +644,6 @@ export default function WorkbenchPage({
                     </>
                   ) : (
                     <>
-                      <Button
-                        onClick={() => handleGenerateDocument("投诉（举报）处理情况告知书")}
-                        disabled={generating !== null}
-                        variant="outline"
-                      >
-                        {generating === "投诉（举报）处理情况告知书" ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <FileText className="h-4 w-4 mr-2" />
-                        )}
-                        生成处理情况告知书
-                      </Button>
                       <Button
                         onClick={() => handleGenerateDocument("信访事项受理告知书")}
                         disabled={generating !== null}
@@ -691,6 +679,18 @@ export default function WorkbenchPage({
                           <FileText className="h-4 w-4 mr-2" />
                         )}
                         生成延期办理告知书
+                      </Button>
+                      <Button
+                        onClick={() => handleGenerateDocument("投诉（举报）处理情况告知书")}
+                        disabled={generating !== null}
+                        variant="outline"
+                      >
+                        {generating === "投诉（举报）处理情况告知书" ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <FileText className="h-4 w-4 mr-2" />
+                        )}
+                        生成处理情况告知书
                       </Button>
                     </>
                   )}
