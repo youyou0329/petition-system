@@ -100,29 +100,13 @@ export default function CaseDetailPage({
   };
 
   const getCurrentStepInfo = () => {
-    if (!caseData) return { step: 1, label: "信息录入", href: `/cases/${id}/edit` };
+    if (!caseData) return { step: 1, label: "信息录入", href: `/cases/${id}/workbench` };
 
     const hasWrittenResponse =
       caseData.requires_written_response || caseData.source === "信访信息系统";
 
-    switch (caseData.current_step) {
-      case 1:
-        return { step: 1, label: "AI分析", href: `/cases/${id}/analyze` };
-      case 2:
-        return { step: 2, label: "流程指引", href: `/cases/${id}/guide` };
-      case 3:
-        return {
-          step: 3,
-          label: hasWrittenResponse ? "文书模板" : "完成",
-          href: hasWrittenResponse ? `/cases/${id}/document` : `/cases/${id}`,
-        };
-      case 4:
-        return { step: 4, label: "文书检查", href: `/cases/${id}/check` };
-      case 5:
-        return { step: 5, label: "已完成", href: `/cases/${id}` };
-      default:
-        return { step: 1, label: "信息录入", href: `/cases/${id}/edit` };
-    }
+    // 所有步骤都跳转到工作台
+    return { step: caseData.current_step, label: "工作台", href: `/cases/${id}/workbench` };
   };
 
   if (loading) {
@@ -206,10 +190,13 @@ export default function CaseDetailPage({
 
           {caseData.status !== "completed" && (
             <div className="mt-6 pt-4 border-t">
-              <Button onClick={() => router.push(stepInfo.href)}>
-                继续：{stepInfo.label}
+              <Button size="lg" onClick={() => router.push(`/cases/${id}/workbench`)}>
+                📋 进入工作台办理
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
+              <p className="text-sm text-muted-foreground mt-2">
+                点击进入工作台，按步骤完成办理
+              </p>
             </div>
           )}
         </CardContent>
