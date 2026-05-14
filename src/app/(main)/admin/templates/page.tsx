@@ -31,7 +31,15 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, FileText, Trash2 } from "lucide-react";
+import {
+  Document,
+  Paragraph,
+  TextRun,
+  Packer,
+  AlignmentType,
+} from "docx";
+import { saveAs } from "file-saver";
+import { Loader2, Plus, FileText, Trash2, Download, Eye } from "lucide-react";
 
 interface TemplateData {
   id: string;
@@ -55,6 +63,7 @@ export default function TemplatesPage() {
   const [category, setCategory] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState<TemplateData | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -147,6 +156,74 @@ export default function TemplatesPage() {
       fetchTemplates();
     } catch {
       alert("删除失败");
+    }
+  };
+
+  // 下载模板为 Word 文档
+  const handleDownload = async (template: TemplateData) => {
+    try {
+      // 将模板内容按段落分割
+      const lines = template.template_content.split("\n");
+
+      // 创建文档段落
+      const paragraphs: Paragraph[] = lines.map((line, index) => {
+        // 第一行作为标题
+        if (index === 0) {
+          return new Paragraph({
+            children: [
+              new TextRun({
+                text: line,
+                bold: true,
+                size: 36, // 18pt
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 300 },
+          });
+        }
+
+        // 落款部分（包含"印章"或"日期"）右对齐
+        if (line.includes("承办单位印章") || line.includes("落款日期") || 
+            /^\s*（.*印章）/.test(line) || /^\s*xxxx年xx月xx日/.test(line)) {
+          return new Paragraph({
+            children: [new TextRun({ text: line, size: 24 })],
+            alignment: AlignmentType.RIGHT,
+            spacing: { after: 100 },
+          });
+        }
+
+        // 空行
+        if (line.trim() === "") {
+          return new Paragraph({
+            children: [],
+            spacing: { after: 100 },
+          });
+        }
+
+        // 普通段落
+        return new Paragraph({
+          children: [new TextRun({ text: line, size: 24 })],
+          spacing: { after: 100 },
+          indent: { firstLine: 480 }, // 首行缩进2字符
+        });
+      });
+
+      // 创建文档
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: paragraphs,
+          },
+        ],
+      });
+
+      // 生成并下载
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${template.name}.docx`);
+    } catch (error) {
+      console.error("下载失败:", error);
+      alert("下载失败，请稍后重试");
     }
   };
 
@@ -288,13 +365,32 @@ export default function TemplatesPage() {
                       {new Date(template.created_at).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(template.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPreviewTemplate(template)}
+                          title="预览"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(template)}
+                          title="下载"
+                        >
+                          <Download className="h-4 w-4 text-blue-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(template.id)}
+                          title="删除"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -327,6 +423,33 @@ export default function TemplatesPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* 预览对话框 */}
+      <Dialog open={!!previewTemplate} onOpenChange={() => setPreviewTemplate(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{previewTemplate?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <pre className="whitespace-pre-wrap font-sans text-sm bg-muted p-4 rounded-lg">
+              {previewTemplate?.template_content}
+            </pre>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewTemplate(null)}>
+              关闭
+            </Button>
+            <Button onClick={() => {
+              if (previewTemplate) {
+                handleDownload(previewTemplate);
+              }
+            }}>
+              <Download className="h-4 w-4 mr-2" />
+              下载文档
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
