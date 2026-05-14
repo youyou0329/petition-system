@@ -526,7 +526,7 @@ export default function WorkbenchPage({
                     )}
                     {caseData.source === "生态环境平台" && (
                       <>
-                        <p>• 办理时限：<strong>60个自然日</strong></p>
+                        <p>• 办理时限：自<strong>点击受理之日起60个自然日内</strong>回复</p>
                         <p>• 受理确认：<strong>15个自然日内</strong>确认是否属于本部门职责，若属于则在<strong>15个自然日内</strong>在平台上点击受理</p>
                         <p>• 回退时限：不在职责范围内的，收到转办件后<strong>2个工作日内</strong>附上明确依据回退</p>
                         <p>• 答复要体现反映单位全称、是否属实、查处情况</p>
