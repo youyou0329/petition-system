@@ -298,10 +298,13 @@ export default function WorkbenchPage({
             </p>
           </div>
           <div className="text-right">
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4 text-orange-500" />
-              <span>
-                办理时限：{deadline.process} {deadline.unit}
+              <span className="font-medium text-foreground">
+                {caseData.source === "信访信息系统" && "收到之日起15日内受理，受理之日起60日内答复"}
+                {caseData.source === "首问负责制" && "20个工作日"}
+                {caseData.source === "12345热线" && "7个自然日"}
+                {caseData.source === "生态环境平台" && "点击受理之日起60个自然日"}
               </span>
             </div>
           </div>
@@ -506,29 +509,28 @@ export default function WorkbenchPage({
                   <div className="text-sm text-orange-700 space-y-1">
                     {caseData.source === "信访信息系统" && (
                       <>
-                        <p>• 自收到之日起 <strong>15日内</strong> 出具受理告知书</p>
-                        <p>• 自受理之日起 <strong>60日内</strong> 出具答复意见书</p>
+                        <p>• 总体时限：收到之日起<strong>15日内受理</strong>，受理之日起<strong>60日内答复</strong></p>
+                        <p>• 必须出具受理告知书和答复意见书</p>
                         <p>• 答复需逐条回应诉求，告知救济途径</p>
                       </>
                     )}
                     {caseData.source === "首问负责制" && (
                       <>
-                        <p>• 办理时限：<strong>20个工作日</strong></p>
+                        <p>• 总体时限：<strong>20个工作日</strong></p>
                         <p>• 答复要体现反映单位全称、是否属实、查处情况、整改完成情况</p>
                       </>
                     )}
                     {caseData.source === "12345热线" && (
                       <>
-                        <p>• 办理时限：<strong>7个自然日</strong></p>
-                        <p>• 合理诉求尽量解决，不合理诉求解释清楚并提交不合理诉求申请</p>
+                        <p>• 总体时限：<strong>7个自然日</strong></p>
+                        <p>• 合理诉求尽量解决，不合理诉求解释清楚</p>
                         <p>• 办理情况报送至市局"环境信访"内网账号</p>
                       </>
                     )}
                     {caseData.source === "生态环境平台" && (
                       <>
-                        <p>• 办理时限：自<strong>点击受理之日起60个自然日内</strong>回复</p>
-                        <p>• 受理确认：<strong>15个自然日内</strong>确认是否属于本部门职责，若属于则在<strong>15个自然日内</strong>在平台上点击受理</p>
-                        <p>• 回退时限：不在职责范围内的，收到转办件后<strong>2个工作日内</strong>附上明确依据回退</p>
+                        <p>• 总体时限：点击受理之日起<strong>60个自然日内</strong>回复</p>
+                        <p>• 关键节点：15日内确认职责并点击受理，不在职责范围2个工作日内回退</p>
                         <p>• 答复要体现反映单位全称、是否属实、查处情况</p>
                         <p>• 需整改的要上传整改前后对比照片</p>
                       </>

@@ -249,6 +249,47 @@ export default function CheckPage({
         </Alert>
       )}
 
+      {/* 检查标准说明 */}
+      <Card className="mb-6 border-blue-200 bg-blue-50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-blue-600" />
+            检查标准
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {caseData.source === "信访信息系统" || caseData.requires_written_response ? (
+            <div className="space-y-2 text-sm">
+              <p className="font-medium text-blue-800">本信访件需出具正式文书，检查标准：</p>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>是否针对诉求<strong>逐一答复</strong></li>
+                <li>措辞是否得当、通俗易懂</li>
+                <li>是否体现反映单位全称、问题是否属实、现场查处情况、处理措施</li>
+                <li>是否包含<strong>救济途径告知</strong>（复议/诉讼权利和时限）</li>
+                <li>格式是否规范（标题、编号、落款、日期等）</li>
+              </ul>
+            </div>
+          ) : (
+            <div className="space-y-2 text-sm">
+              <p className="font-medium text-blue-800">本信访件无需出具正式文书，检查标准：</p>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>是否针对诉求<strong>逐一答复</strong></li>
+                <li>措辞是否得当、通俗易懂，不可敷衍了事、语句不通、晦涩难懂</li>
+                <li>是否体现反映单位<strong>规范全称</strong></li>
+                <li>是否说明<strong>问题是否属实</strong></li>
+                <li>是否说明<strong>现场查处情况及采取的措施</strong></li>
+                <li>是否说明<strong>是否整改完成</strong></li>
+                <li>如需整改，是否上传整改前后对比照片</li>
+                <li>如不在职责范围，是否明确描述核查情况及依据</li>
+              </ul>
+              <p className="text-xs text-orange-600 mt-3">
+                ⚠️ 只有信访人提出经济赔偿等诉求时，才需要检查是否提供救济途径告知
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 左侧：上传文书 */}
         <Card>

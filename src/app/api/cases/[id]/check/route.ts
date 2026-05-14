@@ -93,12 +93,30 @@ export async function POST(
     const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
     const llmClient = new LLMClient(new Config(), customHeaders);
 
-    const systemPrompt = `你是一位信访工作审核专家，负责检查文书的合规性。
+    // 判断是否需要出具文书（信访信息系统必须出具）
+    const requiresDocument = caseData.source === "信访信息系统";
+    
+    // 判断是否有经济赔偿等诉求（需要检查救济途径）
+    const appeals = analysisData?.appeals as Array<{ content: string; type?: string }> || [];
+    const hasCompensationAppeal = appeals.some(a => 
+      a.content.includes("赔偿") || 
+      a.content.includes("补偿") || 
+      a.content.includes("经济损失") ||
+      a.type === "求助类"
+    );
+
+    let systemPrompt = "";
+    
+    if (requiresDocument) {
+      // 信访信息系统 - 完整检查标准
+      systemPrompt = `你是一位信访工作审核专家，负责检查信访答复文书的合规性。
+
+信访来源：信访信息系统（必须出具正式文书）
 
 检查维度：
 1. 程序合规
-   - 是否符合受理时限要求
-   - 是否在法定期限内答复
+   - 是否符合受理时限要求（收到之日起15日内受理）
+   - 是否在法定期限内答复（受理之日起60日内）
    - 是否遗漏必要的告知事项
 
 2. 格式规范
@@ -116,12 +134,12 @@ export async function POST(
 4. 语言规范
    - 是否存在不当表述
    - 是否有错别字或语病
-   - 是否告知了救济权利和时限
+   - 是否告知了救济权利和时限（60日内申请复议，6个月内提起诉讼）
 
 请以 JSON 格式返回检查结果：
 {
-  "passed": boolean,  // 是否通过检查
-  "score": number,    // 综合评分 (0-100)
+  "passed": boolean,
+  "score": number,
   "checks": [
     {
       "category": "程序合规|格式规范|内容完整|语言规范",
@@ -134,6 +152,47 @@ export async function POST(
   "suggestions": ["改进建议"],
   "summary": "整体评价"
 }`;
+    } else {
+      // 首问负责制、12345热线、生态环境平台 - 简化检查标准
+      systemPrompt = `你是一位信访工作审核专家，负责检查信访答复内容的合规性。
+
+信访来源：${caseData.source}（无需出具正式文书，仅需平台答复）
+
+检查标准：
+
+1. 诉求回应
+   - 是否针对反映问题逐条进行明确答复
+   - 措辞是否得当、通俗易懂
+   - 是否存在敷衍了事、语句不通、晦涩难懂的情况
+
+2. 办理情况
+   - 是否体现举报人所反映单位的规范全称
+   - 是否说明反映问题是否属实
+   - 是否描述现场查处情况及采取的措施
+   - 是否说明是否整改完成
+   - 如需整改：是否跟踪督导并上传整改前后对比照片
+   - 如不在职责范围：是否明确描述核查情况及不属于职责范围的条文依据
+
+${hasCompensationAppeal ? `3. 救济途径
+   - 信访人提出了经济赔偿等诉求，需要检查是否告知了救济途径（如申请行政复议、提起行政诉讼等）` : ""}
+
+请以 JSON 格式返回检查结果：
+{
+  "passed": boolean,
+  "score": number,
+  "checks": [
+    {
+      "category": "诉求回应|办理情况${hasCompensationAppeal ? "|救济途径" : ""}",
+      "item": "检查项名称",
+      "status": "pass|warning|fail",
+      "message": "说明"
+    }
+  ],
+  "issues": ["问题列表"],
+  "suggestions": ["改进建议"],
+  "summary": "整体评价"
+}`;
+    }
 
     const appealsList = analysisData?.appeals
       ? (analysisData.appeals as Array<{ content: string }>)
