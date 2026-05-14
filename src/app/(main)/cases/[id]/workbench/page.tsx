@@ -530,7 +530,7 @@ export default function WorkbenchPage({
                     {caseData.source === "首问负责制" && (
                       <>
                         <p>• 总体时限：<strong>20个工作日</strong></p>
-                        <p>• 答复要体现反映单位全称、是否属实、查处情况、整改完成情况</p>
+                        <p>• 不在职责范围：收到转办件后<strong>2个工作日内</strong>回退</p>
                       </>
                     )}
                     {caseData.source === "12345热线" && (
