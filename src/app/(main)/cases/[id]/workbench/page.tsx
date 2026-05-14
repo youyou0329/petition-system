@@ -618,16 +618,40 @@ export default function WorkbenchPage({
                   {isPetitionSystem ? (
                     <>
                       <Button
-                        onClick={() => handleGenerateDocument("受理告知书")}
+                        onClick={() => handleGenerateDocument("信访事项受理告知书")}
                         disabled={generating !== null}
                         variant="outline"
                       >
-                        {generating === "受理告知书" ? (
+                        {generating === "信访事项受理告知书" ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         ) : (
                           <FileText className="h-4 w-4 mr-2" />
                         )}
                         生成受理告知书
+                      </Button>
+                      <Button
+                        onClick={() => handleGenerateDocument("信访事项不予受理告知书")}
+                        disabled={generating !== null}
+                        variant="outline"
+                      >
+                        {generating === "信访事项不予受理告知书" ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <FileText className="h-4 w-4 mr-2" />
+                        )}
+                        生成不予受理告知书
+                      </Button>
+                      <Button
+                        onClick={() => handleGenerateDocument("延期办理告知书")}
+                        disabled={generating !== null}
+                        variant="outline"
+                      >
+                        {generating === "延期办理告知书" ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <FileText className="h-4 w-4 mr-2" />
+                        )}
+                        生成延期办理告知书
                       </Button>
                       <Button
                         onClick={() => handleGenerateDocument("依法履职答复书")}

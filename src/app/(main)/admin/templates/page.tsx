@@ -42,12 +42,8 @@ interface TemplateData {
 }
 
 const categories = [
-  { value: "答复意见书", label: "答复意见书" },
-  { value: "受理告知书", label: "受理告知书" },
-  { value: "延期告知书", label: "延期告知书" },
-  { value: "不予受理告知书", label: "不予受理告知书" },
-  { value: "答复函", label: "答复函" },
-  { value: "其他", label: "其他" },
+  { value: "书面答复", label: "书面答复" },
+  { value: "信访信息系统", label: "信访信息系统" },
 ];
 
 export default function TemplatesPage() {

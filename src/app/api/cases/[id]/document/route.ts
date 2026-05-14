@@ -43,24 +43,35 @@ export async function POST(
   }
 
   try {
-    // 从知识库检索模板
-    const knowledgeClient = new KnowledgeClient(new Config());
-    const searchQuery = `${document_type || "答复意见书"} 模板`;
-    
-    const searchResult = await knowledgeClient.search(searchQuery, undefined, 3, 0.5);
-    
-    let templateContext = "";
-    if (searchResult.code === 0 && searchResult.chunks && searchResult.chunks.length > 0) {
-      templateContext = searchResult.chunks
-        .map((chunk: { content: string }) => chunk.content)
-        .join("\n\n");
+    const documentType = document_type || "投诉（举报）处理情况告知书";
+
+    // 先从数据库获取模板
+    const { data: templateData } = await client
+      .from("document_templates")
+      .select("*")
+      .eq("name", documentType)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    let templateContent = templateData?.template_content || "";
+
+    // 如果数据库没有模板，从知识库检索
+    if (!templateContent) {
+      const knowledgeClient = new KnowledgeClient(new Config());
+      const searchQuery = `${documentType} 模板`;
+
+      const searchResult = await knowledgeClient.search(searchQuery, undefined, 3, 0.5);
+
+      if (searchResult.code === 0 && searchResult.chunks && searchResult.chunks.length > 0) {
+        templateContent = searchResult.chunks
+          .map((chunk: { content: string }) => chunk.content)
+          .join("\n\n");
+      }
     }
 
     // 调用 AI 生成文书
     const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
     const llmClient = new LLMClient(new Config(), customHeaders);
-
-    const documentType = document_type || "投诉（举报）处理情况告知书";
 
     const systemPrompt = `你是一位信访文书写作专家，负责根据信访信息生成规范的文书。
 
@@ -95,7 +106,7 @@ ${(analysisData.appeals as Array<{ content: string }>).map((a, i) => `${i + 1}. 
 关键信息：
 ${JSON.stringify(analysisData.key_info, null, 2)}
 
-${templateContext ? `参考模板：\n${templateContext}` : ""}
+${templateContent ? `参考模板：\n${templateContent}` : ""}
 
 请生成完整的${documentType}，要求：
 1. 逐条回应每个诉求
