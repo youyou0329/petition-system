@@ -6,6 +6,10 @@ export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
 
+    console.log("Login attempt for:", username);
+    console.log("SUPABASE_URL set:", !!process.env.COZE_SUPABASE_URL);
+    console.log("SUPABASE_KEY set:", !!process.env.COZE_SUPABASE_SERVICE_ROLE_KEY);
+
     if (!username || !password) {
       return NextResponse.json(
         { error: "用户名和密码不能为空" },
