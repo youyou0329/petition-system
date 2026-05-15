@@ -20,13 +20,27 @@ export async function POST(request: NextRequest) {
     const client = getSupabaseClient();
 
     // 查询用户
-    const { data: user, error } = await client
-      .from("users")
-      .select("id, username, password_hash, real_name, role, department, is_active")
-      .eq("username", username)
-      .maybeSingle();
+    console.log("Querying database for user...");
+    let user, error;
+    try {
+      const result = await client
+        .from("users")
+        .select("id, username, password_hash, real_name, role, department, is_active")
+        .eq("username", username)
+        .maybeSingle();
+      user = result.data;
+      error = result.error;
+      console.log("Query result - user found:", !!user, "error:", error?.message);
+    } catch (e) {
+      console.error("Database query exception:", e);
+      return NextResponse.json(
+        { error: "数据库连接失败" },
+        { status: 500 }
+      );
+    }
 
     if (error) {
+      console.error("Database error:", error);
       return NextResponse.json(
         { error: "登录失败，请稍后重试" },
         { status: 500 }
@@ -49,6 +63,9 @@ export async function POST(request: NextRequest) {
 
     // 验证密码
     const passwordHash = await hashPassword(password);
+    console.log("Input password hash:", passwordHash);
+    console.log("DB password hash:", user.password_hash);
+    console.log("Hashes match:", passwordHash === user.password_hash);
     if (passwordHash !== user.password_hash) {
       return NextResponse.json(
         { error: "用户名或密码错误" },
