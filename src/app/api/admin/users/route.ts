@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient } from "@/storage/database/supabase-client";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, hashPassword } from "@/lib/auth";
 
 // 获取用户列表
 export async function GET(request: NextRequest) {
@@ -77,12 +77,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "用户名已存在" }, { status: 400 });
   }
 
-  // 创建用户
+  // 创建用户 - 密码需要加密
+  const passwordHash = await hashPassword(password);
   const { data, error } = await client
     .from("users")
     .insert({
       username,
-      password_hash: password, // 实际应用中应该加密
+      password_hash: passwordHash,
       real_name,
       role: role || "user",
       department,
