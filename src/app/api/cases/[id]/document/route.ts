@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient } from "@/storage/database/supabase-client";
 import { verifyAuth } from "@/lib/auth";
-import { LLMClient, Config, HeaderUtils } from "coze-coding-dev-sdk";
-import { KnowledgeClient } from "coze-coding-dev-sdk";
+import { callLLM, checkLLMConfig } from "@/lib/llm-client";
 
 // 严格模板类文书（不发挥，只填充占位符）
 const STRICT_TEMPLATES = [
@@ -118,7 +117,7 @@ export async function POST(
     const defaultDocumentType = `${requestType}处理情况告知书`;
     const documentType = document_type || defaultDocumentType;
 
-    // 先从数据库获取模板
+    // 从数据库获取模板
     const { data: templateData } = await client
       .from("document_templates")
       .select("*")
@@ -126,30 +125,7 @@ export async function POST(
       .eq("is_active", true)
       .maybeSingle();
 
-    let templateContent = templateData?.template_content || "";
-
-    // 如果数据库没有模板，从知识库检索
-    if (!templateContent) {
-      const knowledgeClient = new KnowledgeClient(new Config());
-      const searchQuery = `${documentType} 模板`;
-
-      const searchResult = await knowledgeClient.search(
-        searchQuery,
-        undefined,
-        3,
-        0.5
-      );
-
-      if (
-        searchResult.code === 0 &&
-        searchResult.chunks &&
-        searchResult.chunks.length > 0
-      ) {
-        templateContent = searchResult.chunks
-          .map((chunk: { content: string }) => chunk.content)
-          .join("\n\n");
-      }
-    }
+    const templateContent = templateData?.template_content || "";
 
     let generatedContent: string;
 
@@ -163,8 +139,10 @@ export async function POST(
       );
     } else {
       // 答复类文书：调用AI生成
-      const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
-      const llmClient = new LLMClient(new Config(), customHeaders);
+      const llmConfig = checkLLMConfig();
+      if (!llmConfig.configured) {
+        return NextResponse.json({ error: llmConfig.error }, { status: 500 });
+      }
 
       // 检查是否有损害赔偿诉求
       const hasCompensation = hasCompensationClaim(
@@ -237,13 +215,11 @@ ${templateContent ? `参考模板：\n${templateContent}` : ""}
 2. 内容具体、有据可依
 3. 按照救济途径统一口径告知救济权利`;
 
-      const response = await llmClient.invoke(
-        [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        { model: "doubao-seed-1-8-251228", temperature: 0.3 }
-      );
+      const response = await callLLM(systemPrompt, userPrompt);
+      
+      if (!response.success) {
+        return NextResponse.json({ error: response.error }, { status: 500 });
+      }
 
       generatedContent = response.content;
     }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient } from "@/storage/database/supabase-client";
 import { verifyAuth } from "@/lib/auth";
-import { LLMClient, Config, HeaderUtils } from "coze-coding-dev-sdk";
+import { callLLM, checkLLMConfig } from "@/lib/llm-client";
 
 // AI 分析信访诉求
 export async function POST(
@@ -11,6 +11,12 @@ export async function POST(
   const user = await verifyAuth();
   if (!user) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+
+  // 检查 LLM 配置
+  const llmConfig = checkLLMConfig();
+  if (!llmConfig.configured) {
+    return NextResponse.json({ error: llmConfig.error }, { status: 500 });
   }
 
   const { id } = await params;
@@ -39,11 +45,6 @@ export async function POST(
     .eq("id", id);
 
   try {
-    // 调用 AI 分析
-    const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
-    const config = new Config();
-    const llmClient = new LLMClient(config, customHeaders);
-
     const systemPrompt = `你是一位专业的信访工作分析专家，负责分析信访件并提取关键信息。
 
 请仔细阅读信访件内容，完成以下分析任务：
@@ -93,15 +94,12 @@ ${caseData.raw_content}
 
 请提取诉求和关键信息，以 JSON 格式输出。`;
 
-    const messages = [
-      { role: "system" as const, content: systemPrompt },
-      { role: "user" as const, content: userPrompt },
-    ];
-
-    const response = await llmClient.invoke(messages, {
-      model: "doubao-seed-1-8-251228",
-      temperature: 0.3,
-    });
+    // 调用 LLM
+    const response = await callLLM(systemPrompt, userPrompt);
+    
+    if (!response.success) {
+      throw new Error(response.error || "AI 调用失败");
+    }
 
     // 解析 AI 响应
     let analysisResult;

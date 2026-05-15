@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient } from "@/storage/database/supabase-client";
 import { verifyAuth } from "@/lib/auth";
-import { KnowledgeClient, Config, DataSourceType } from "coze-coding-dev-sdk";
 
 // 获取指引文件列表
 export async function GET(request: NextRequest) {
@@ -75,17 +74,6 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  // 同步到知识库
-  try {
-    const knowledgeClient = new KnowledgeClient(new Config());
-    await knowledgeClient.addDocuments(
-      [{ source: DataSourceType.TEXT, raw_data: content }],
-      "guidelines"
-    );
-  } catch (e) {
-    console.error("同步知识库失败:", e);
   }
 
   // 记录操作日志

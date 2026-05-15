@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient } from "@/storage/database/supabase-client";
 import { verifyAuth } from "@/lib/auth";
-import { LLMClient, Config, HeaderUtils, S3Storage } from "coze-coding-dev-sdk";
+import { callLLM, checkLLMConfig } from "@/lib/llm-client";
 
 // 文书检查
 export async function POST(
@@ -57,27 +57,9 @@ export async function POST(
   let contentToCheck = documentContent;
 
   try {
-    // 如果上传了文件，先存储
+    // 如果上传了文件，读取内容
     if (file) {
-      const storage = new S3Storage({
-        endpointUrl: process.env.COZE_BUCKET_ENDPOINT_URL,
-        bucketName: process.env.COZE_BUCKET_NAME,
-        region: "cn-beijing",
-      });
-      const fileName = `documents/${id}/${Date.now()}_${file.name}`;
-      
-      const arrayBuffer = await file.arrayBuffer();
-      const fileKey = await storage.uploadFile({
-        fileContent: Buffer.from(arrayBuffer),
-        fileName,
-        contentType: file.type,
-      });
-      
-      if (fileKey) {
-        fileUrl = await storage.generatePresignedUrl({ key: fileKey, expireTime: 86400 });
-      }
-
-      // 读取文件内容（如果是文本文件）
+      // 对于文本文件，直接读取
       if (file.type === "text/plain" || file.name.endsWith(".txt")) {
         contentToCheck = await file.text();
       } else if (
@@ -85,13 +67,17 @@ export async function POST(
         file.name.endsWith(".docx")
       ) {
         // 对于 docx 文件，提示用户复制内容
-        contentToCheck = null;
+        return NextResponse.json({
+          error: "请将 Word 文档内容复制粘贴到文本框中进行检查，暂不支持直接上传 docx 文件"
+        }, { status: 400 });
       }
     }
 
-    // 调用 AI 检查文书
-    const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
-    const llmClient = new LLMClient(new Config(), customHeaders);
+    // 检查 LLM 配置
+    const llmConfig = checkLLMConfig();
+    if (!llmConfig.configured) {
+      return NextResponse.json({ error: llmConfig.error }, { status: 500 });
+    }
 
     // 判断是否需要出具文书（信访信息系统必须出具）
     const requiresDocument = caseData.source === "信访信息系统";
@@ -215,13 +201,11 @@ ${contentToCheck || "（已上传文件，请告知用户复制文件内容进�
 
 请逐项检查并给出详细的检查报告。`;
 
-    const response = await llmClient.invoke(
-      [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      { model: "doubao-seed-1-8-251228", temperature: 0.3 }
-    );
+    const response = await callLLM(systemPrompt, userPrompt);
+    
+    if (!response.success) {
+      return NextResponse.json({ error: response.error }, { status: 500 });
+    }
 
     // 解析 AI 返回的 JSON
     let checkResult;
