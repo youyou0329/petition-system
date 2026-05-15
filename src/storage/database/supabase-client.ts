@@ -1,28 +1,11 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-let envLoaded = false;
-
 interface SupabaseCredentials {
   url: string;
   anonKey: string;
 }
 
-function loadEnv(): void {
-  if (envLoaded || (process.env.COZE_SUPABASE_URL && process.env.COZE_SUPABASE_ANON_KEY)) {
-    return;
-  }
-
-  try {
-    require('dotenv').config();
-    envLoaded = true;
-  } catch {
-    // dotenv not available, use process.env directly
-  }
-}
-
 function getSupabaseCredentials(): SupabaseCredentials {
-  loadEnv();
-
   const url = process.env.COZE_SUPABASE_URL;
   const anonKey = process.env.COZE_SUPABASE_ANON_KEY;
 
@@ -37,7 +20,6 @@ function getSupabaseCredentials(): SupabaseCredentials {
 }
 
 function getSupabaseServiceRoleKey(): string | undefined {
-  loadEnv();
   return process.env.COZE_SUPABASE_SERVICE_ROLE_KEY;
 }
 
@@ -52,7 +34,7 @@ function getSupabaseClient(token?: string): SupabaseClient {
     key = serviceRoleKey ?? anonKey;
   }
 
-  const globalOptions: Record<string, any> = {};
+  const globalOptions: Record<string, unknown> = {};
   if (token) {
     globalOptions.headers = { Authorization: `Bearer ${token}` };
   }
@@ -69,4 +51,4 @@ function getSupabaseClient(token?: string): SupabaseClient {
   });
 }
 
-export { loadEnv, getSupabaseCredentials, getSupabaseServiceRoleKey, getSupabaseClient };
+export { getSupabaseCredentials, getSupabaseServiceRoleKey, getSupabaseClient };
